@@ -1,3 +1,7 @@
+use std::io::Write;
+use std::sync::mpsc;
+use std::{io, thread};
+
 use crate::apple::Apple;
 use crate::snake::Snake;
 
@@ -57,4 +61,20 @@ impl Window {
         }
         apple.clone()
     }
+}
+
+pub fn get_input(tx: mpsc::Sender<char>) {
+    std::thread::spawn(move || {
+        let mut input = String::new();
+        while let Ok(_) = io::stdin().read_line(&mut input) {
+            let first_char = input.trim().chars().next().unwrap_or('\0');
+            tx.send(first_char).expect("Failed to send message");
+            input.clear();
+        }
+    });
+}
+
+pub fn clear_terminal() {
+    print!("\x1b[2J\x1b[H");
+    io::stdout().flush().unwrap();
 }

@@ -1,20 +1,27 @@
+use std::{sync::mpsc, thread::sleep, time::Duration};
+
 mod apple;
 mod snake;
 mod utils;
 
 fn main() {
     let window = utils::Window::new();
-    let snake = snake::Snake::new(window.columns, window.rows);
+    let mut snake = snake::Snake::new(window.columns, window.rows);
     let apple = apple::Apple::new(window.columns, window.rows);
 
-    window.draw_game(&snake, &apple);
-    print!("Jabko: \nRow: {}\nColumn: {}\n", apple.row, apple.column);
-    print!(
-        "Okno: \nRow: {}\nColumn: {}\n\t\n",
-        window.rows, window.columns
-    );
+    let (tx, rx) = mpsc::channel();
 
-    if apple.row > window.rows || apple.column > window.columns {
-        print!("KOGOS POJEBALO");
+    std::thread::spawn(move || {
+        utils::get_input(tx);
+    });
+
+    loop {
+        utils::clear_terminal();
+        window.draw_game(&snake, &apple);
+        let input = rx.recv().expect("Failed to receive input");
+        snake.change_snake_direction(input);
+        snake.move_snake();
+        sleep(Duration::from_millis(100));
+        continue;
     }
 }
