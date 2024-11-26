@@ -1,6 +1,6 @@
 use crossterm::terminal;
 
-use std::{io::{self, Write}, clone::Clone};
+use std::io::{self, Write};
 
 use crate::apple::Apple;
 use crate::snake::Snake;
@@ -23,7 +23,7 @@ impl Window {
     }
 
     pub fn draw_game(&self, snake: &Snake, apple: &Apple) {
-        print!("\x1B[H");
+        print!("\x1B[2J\x1B[H");
 
         for row in 0..self.rows {
             for column in 0..self.columns {
@@ -57,13 +57,8 @@ impl Window {
     pub fn eat_apple(&self, snake: &mut Snake, apple: &Apple) -> Apple {
         if apple.row == snake.rows[0] && apple.column == snake.columns[0] {
             snake.grow_snake();
-            return Apple::spawn_apple(self.rows, self.columns);
+            return Apple::new(self.rows, self.columns);
         }
-        apple.clone()
+        apple.to_owned()
     }
-}
-
-pub fn clear_terminal() {
-    print!("\x1B[2J\x1B[H");
-    io::stdout().flush().unwrap();
 }

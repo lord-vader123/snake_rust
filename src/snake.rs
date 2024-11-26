@@ -17,24 +17,51 @@ impl Snake {
     }
 
     pub fn change_snake_direction(&mut self, direction: char) {
+        let opposite = match self.direction {
+            'w' => 's',
+            's' => 'w',
+            'a' => 'd',
+            'd' => 'a',
+            _ => return,
+        };
         match direction {
-            'w' | 's' | 'a' | 'd' => self.direction = direction,
+            'w' | 's' | 'a' | 'd' => {
+                if direction != opposite {
+                    self.direction = direction;
+                }
+            }
             _ => return,
         }
     }
 
     pub fn move_snake(&mut self) {
-        match self.direction {
-            'w' => self.rows[0] -= 1,
-            's' => self.rows[0] += 1,
-            'a' => self.columns[0] -= 1,
-            'd' => self.columns[0] += 1,
-            _ => return,
-        }
-
         for i in (1..self.rows.len()).rev() {
             self.rows[i] = self.rows[i - 1];
             self.columns[i] = self.columns[i - 1];
+        }
+
+        match self.direction {
+            'w' => {
+                if self.rows[0] > 1 {
+                    self.rows[0] -= 1;
+                }
+            }
+            's' => {
+                if self.rows[0] < u16::MAX {
+                    self.rows[0] += 1;
+                }
+            }
+            'a' => {
+                if self.columns[0] > 0 {
+                    self.columns[0] -= 1;
+                }
+            }
+            'd' => {
+                if self.columns[0] < u16::MAX {
+                    self.columns[0] += 1;
+                }
+            }
+            _ => {}
         }
     }
 
@@ -47,23 +74,36 @@ impl Snake {
     }
 
     pub fn is_collision(&self, max_rows: u16, max_columns: u16) -> bool {
-        let head_row = self.rows[0];
-        let head_column = self.columns[0];
+        return Snake::is_collision_self(self)
+            || Snake::is_collision_wall(self, max_rows, max_columns);
+    }
 
-        if head_row <= 1
-            || head_row >= max_rows - 1
-            || head_column <= 1
-            || head_column >= max_columns - 1
-        {
-            return true;
-        }
-
-        for i in 1..self.rows.len() {
-            if head_row == self.rows[i] && head_column == self.columns[i] {
+    fn is_collision_self(&self) -> bool {
+        for (&snake_row, &snake_column) in self.rows.iter().zip(self.columns.iter()).skip(2) {
+            if self.rows[0] == snake_row && self.columns[0] == snake_column {
+                print!("You hit yourself! ");
                 return true;
             }
         }
-
         false
+    }
+
+    fn is_collision_wall(&self, max_rows: u16, max_columns: u16) -> bool {
+        if self.rows[0] <= 1
+            || self.rows[0] >= max_rows - 1
+            || self.columns[0] == 0
+            || self.columns[0] >= max_columns - 1
+        {
+            print!("You hit the wall! ");
+            return true;
+        }
+        false
+    }
+
+    pub fn is_win(&self, max_rows: u16, max_columns: u16) -> bool {
+        let total_fields = (max_rows - 2) * (max_columns - 2);
+        let snake_size = self.rows.len() as u16;
+
+        snake_size >= total_fields
     }
 }
