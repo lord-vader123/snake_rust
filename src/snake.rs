@@ -1,7 +1,7 @@
 pub struct Snake {
     pub rows: Vec<u16>,
     pub columns: Vec<u16>,
-    direction: char,
+    pub direction: char,
 }
 
 impl Snake {
@@ -39,31 +39,31 @@ impl Snake {
     }
 
     pub fn grow_snake(&mut self) {
-        if self.rows.len() == 1 {
-            match self.direction {
-                'w' => {
-                    self.rows.push(self.rows[0] - 1);
-                    self.columns.push(self.columns[0]);
-                }
-                's' => {
-                    self.rows.push(self.rows[0] + 1);
-                    self.columns.push(self.columns[0]);
-                }
-                'a' => {
-                    self.columns.push(self.columns[0] - 1);
-                    self.rows.push(self.rows[0]);
-                }
-                'd' => {
-                    self.columns.push(self.columns[0] + 1);
-                    self.rows.push(self.rows[0]);
-                }
-                _ => return,
-            }
-        } else {
-            let last_row = self.rows[self.rows.len() - 1];
-            let last_column = self.columns[self.columns.len() - 1];
-            self.rows.push(last_row);
-            self.columns.push(last_column);
+        let last_row = *self.rows.last().unwrap();
+        let last_column = *self.columns.last().unwrap();
+
+        self.rows.push(last_row);
+        self.columns.push(last_column);
+    }
+
+    pub fn is_collision(&self, max_rows: u16, max_columns: u16) -> bool {
+        let head_row = self.rows[0];
+        let head_column = self.columns[0];
+
+        if head_row <= 1
+            || head_row >= max_rows - 1
+            || head_column <= 1
+            || head_column >= max_columns - 1
+        {
+            return true;
         }
+
+        for i in 1..self.rows.len() {
+            if head_row == self.rows[i] && head_column == self.columns[i] {
+                return true;
+            }
+        }
+
+        false
     }
 }

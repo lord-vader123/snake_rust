@@ -1,11 +1,9 @@
-use std::io::Write;
-use std::sync::mpsc;
-use std::{io, thread};
+use crossterm::terminal;
+
+use std::{io::{self, Write}, clone::Clone};
 
 use crate::apple::Apple;
 use crate::snake::Snake;
-
-use crossterm::terminal;
 
 pub struct Window {
     pub rows: u16,
@@ -21,10 +19,12 @@ impl Window {
                 std::process::exit(1);
             }
         };
-        Window { rows, columns }
+        Window { columns, rows }
     }
 
     pub fn draw_game(&self, snake: &Snake, apple: &Apple) {
+        print!("\x1B[H");
+
         for row in 0..self.rows {
             for column in 0..self.columns {
                 if row == 1 || row == self.rows - 1 {
@@ -50,8 +50,8 @@ impl Window {
                     }
                 }
             }
-            println!();
         }
+        io::stdout().flush().unwrap();
     }
 
     pub fn eat_apple(&self, snake: &mut Snake, apple: &Apple) -> Apple {
@@ -63,18 +63,7 @@ impl Window {
     }
 }
 
-pub fn get_input(tx: mpsc::Sender<char>) {
-    std::thread::spawn(move || {
-        let mut input = String::new();
-        while let Ok(_) = io::stdin().read_line(&mut input) {
-            let first_char = input.trim().chars().next().unwrap_or('\0');
-            tx.send(first_char).expect("Failed to send message");
-            input.clear();
-        }
-    });
-}
-
 pub fn clear_terminal() {
-    print!("\x1b[2J\x1b[H");
+    print!("\x1B[2J\x1B[H");
     io::stdout().flush().unwrap();
 }
